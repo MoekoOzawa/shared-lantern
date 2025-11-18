@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ベース: 画面全体の背景・本文フォント */
+@layer base {
+  body {
+    @apply bg-parchment text-textdark font-inter;
+  }
+}
+
+/* コンポーネント用のカスタムクラス */
+@layer components {
+  /* 羊皮紙カードの共通スタイル */
+  .parchment-card {
+    border-radius: 0.9rem;
+    border: 1px solid rgba(201, 181, 140, 0.82);
+    background: radial-gradient(
+      circle at 20% 0%,
+      #fdf6e3 0%,
+      #efe3c8 55%,
+      #e4d1aa 100%
+    );
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  }
+
+  /* リフレクションガイドのボタン */
+  .reflection-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.9rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(198, 166, 103, 0.9);
+    background: radial-gradient(
+      circle at 20% 0%,
+      #fdf6e3 0%,
+      #efe3c8 55%,
+      #e4d1aa 100%
+    );
+    font-family: "Cinzel", system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #8b6a2b;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease;
+  }
+
+  .reflection-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  }
+
+  .reflection-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  }
+}
