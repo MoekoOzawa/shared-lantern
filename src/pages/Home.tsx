@@ -6,22 +6,7 @@ import ElvenPathMap from "../components/ElvenPathMap";
 // 90日プロジェクト設定
 const TOTAL_DAYS = 90;
 // スタート日: 2025-11-19
-const START_DATE = new Date(2025, 10, 19); // 月は0始まりで 10 = 11月
-
-// スタート日・2週間ごと・最終日
-const CHECKPOINT_DAYS = [1, 14, 28, 42, 56, 70, 84, 90];
-
-// 対応するチェックポイント名
-const CHECKPOINT_NAMES = [
-  "Rivendell Departure",
-  "Whispering Grove",
-  "Moonlit Hill",
-  "Starwatch Ridge",
-  "Ancient Runes' Pass",
-  "Silverwood Crossing",
-  "Shimmering Coast",
-  "Grey Havens",
-];
+const START_DATE = new Date(2025, 10, 19); // 月は 0 始まりで 10 = 11月
 
 // Weekly Council 用の保存キー
 const WEEKLY_STORAGE_KEY = "shared-lantern-weekly-summary";
@@ -65,24 +50,6 @@ function getJourneyInfo(): JourneyInfo {
   return { daysElapsed, progress };
 }
 
-function makeCheckpointMessage(
-  daysElapsed: number,
-  remainingDays: number,
-  name: string
-): string {
-  if (daysElapsed === 1) {
-    return `You stand at ${name}, and the first lantern-step is taken. Ninety days of quiet wandering lie before you.`;
-  }
-
-  if (remainingDays <= 0) {
-    return `Your lantern has reached ${name}. The long road behind you settles into memory.`;
-  }
-
-  return `At ${name}, only ${remainingDays} more ${
-    remainingDays === 1 ? "day" : "days"
-  } until your lantern comes to rest in the Grey Havens.`;
-}
-
 // Weekly summary を localStorage から読み込む
 function loadAllWeekly(): WeeklySummaryEntry[] {
   try {
@@ -98,37 +65,22 @@ function loadAllWeekly(): WeeklySummaryEntry[] {
 
 export default function Home() {
   const [progress, setProgress] = useState(0);
-  const [checkpointMessage, setCheckpointMessage] = useState<string | null>(
-    null
-  );
-  const [currentWeek, setCurrentWeek] = useState(0); // 1〜12
   const [daysElapsed, setDaysElapsed] = useState(0); // Day X of 90 表示用
+  const [currentWeek, setCurrentWeek] = useState(0); // 1〜12
   const [lanternAvg, setLanternAvg] = useState(0);
   const [moraleAvg, setMoraleAvg] = useState(0);
-
-  // Weekly 由来の指標
-  const [sharedLantern, setSharedLantern] = useState<number | null>(null);
-  const [realmsHarmony, setRealmsHarmony] = useState<number | null>(null);
 
   useEffect(() => {
     // 日数と進行度
     const { daysElapsed, progress: target } = getJourneyInfo();
-    const remaining = TOTAL_DAYS - daysElapsed;
     setDaysElapsed(daysElapsed);
 
-    // 週番号（1〜12）を計算
+    // 週番号（1〜12）を計算してマップに渡す
     let week = 0;
     if (daysElapsed > 0) {
       week = Math.min(12, Math.ceil(daysElapsed / 7));
     }
     setCurrentWeek(week);
-
-    // チェックポイントメッセージ
-    const idx = CHECKPOINT_DAYS.indexOf(daysElapsed);
-    if (idx !== -1) {
-      const name = CHECKPOINT_NAMES[idx];
-      setCheckpointMessage(makeCheckpointMessage(daysElapsed, remaining, name));
-    }
 
     // Weekly summary から Shared Lantern / Realms Harmony を計算
     const weekly = loadAllWeekly();
@@ -137,15 +89,15 @@ export default function Home() {
       const latest = weekly.reduce((acc, cur) =>
         cur.week > acc.week ? cur : acc
       );
-      const lanternAvg =
+      const lanternAverage =
         (latest.lantern_elf + latest.lantern_hobbit) / 2;
-      const moraleAvg =
+      const moraleAverage =
         (latest.morale_elf + latest.morale_hobbit) / 2;
-      setSharedLantern(lanternAvg);
-      setRealmsHarmony(moraleAvg);
+      setLanternAvg(lanternAverage);
+      setMoraleAvg(moraleAverage);
     } else {
-      setSharedLantern(null);
-      setRealmsHarmony(null);
+      setLanternAvg(0);
+      setMoraleAvg(0);
     }
 
     // 0 → target までアニメーション
@@ -166,87 +118,79 @@ export default function Home() {
     requestAnimationFrame(animate);
   }, []);
 
-  const progressPercent = Math.round(progress * 100);
-
-    return (
+  return (
     <div className="min-h-screen bg-parchment text-textdark">
       <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-10 pt-6">
+        {/* 地図 */}
+        <div className="mb-6 w-full">
+          <ElvenPathMap
+            progress={progress}
+            dayNumber={Math.max(1, daysElapsed)}
+            currentWeek={currentWeek || undefined}
+          />
+        </div>
 
-             {/* 地図 */}
-      <div className="mb-6 w-full">
-        <ElvenPathMap progress={progress} dayNumber={daysElapsed + 1} />
-      </div>
+        {/* Shared Lantern / Realms Harmony セクション */}
+        <section className="mt-4 mb-8 grid w-full gap-4 md:grid-cols-2">
+          {/* Shared Lantern */}
+          <div className="parchment-card">
+            <div className="text-[11px] font-cinzel tracking-[0.18em] uppercase text-amber-700">
+              Shared Lantern
+            </div>
+            <div className="mt-1 font-cinzel text-xl text-elvenGold">
+              {lanternAvg.toFixed(1)} / 5
+            </div>
+            <p className="mt-1 text-xs text-neutral-700">
+              Average sense of safety this week.
+            </p>
+          </div>
 
-                  {/* Shared Lantern / Realms Harmony セクション */}
-<section className="mt-4 mb-8 grid w-full gap-4 md:grid-cols-2">
-  {/* Shared Lantern */}
-  <div className="parchment-card px-4 py-3">
-    <div className="text-[11px] font-cinzel tracking-[0.18em] uppercase text-amber-700">
-      Shared Lantern
-    </div>
-    <div className="mt-1 font-cinzel text-xl text-elvenGold">
-      {lanternAvg.toFixed(1)} / 5
-    </div>
-    <p className="mt-1 text-xs text-neutral-700">
-      Average sense of safety this week.
-    </p>
-  </div>
+          {/* Realms Harmony */}
+          <div className="parchment-card">
+            <div className="text-[11px] font-cinzel tracking-[0.18em] uppercase text-amber-700">
+              Realms Harmony
+            </div>
+            <div className="mt-1 font-cinzel text-xl text-elvenGold">
+              {moraleAvg.toFixed(1)} / 5
+            </div>
+            <p className="mt-1 text-xs text-neutral-700">
+              Overall journey morale between Elf and Hobbit.
+            </p>
+          </div>
+        </section>
 
-  {/* Realms Harmony */}
-  <div className="parchment-card px-4 py-3">
-    <div className="text-[11px] font-cinzel tracking-[0.18em] uppercase text-amber-700">
-      Realms Harmony
-    </div>
-    <div className="mt-1 font-cinzel text-xl text-elvenGold">
-      {moraleAvg.toFixed(1)} / 5
-    </div>
-    <p className="mt-1 text-xs text-neutral-700">
-      Overall journey morale between Elf and Hobbit.
-    </p>
-  </div>
-</section>
+        {/* ナビゲーション：巻物カード風のボタン */}
+        <nav className="mb-10 w-full space-y-3">
+          <Link
+            to="/daily-log"
+            className="nav-scroll-link nav-scroll-link--hobbit"
+          >
+            <div className="font-cinzel text-sm">Daily Log</div>
+            <div className="mt-1 text-xs">
+              Record today&apos;s tokens of light and shadows.
+            </div>
+          </Link>
 
-{/* ナビゲーション：巻物カード風のボタン */}
-<nav className="mb-10 w-full space-y-3">
-  {/* Daily Log */}
-  <Link
-    to="/daily-log"
-    className="group block parchment-card px-4 py-3 hover:brightness-105 transition"
-  >
-    <div className="font-cinzel text-sm text-hobbitBrown">
-      Daily Log
-    </div>
-    <div className="mt-1 text-xs text-neutral-800">
-      Record today&apos;s tokens of light and shadows.
-    </div>
-  </Link>
+          <Link
+            to="/weekly-council"
+            className="nav-scroll-link nav-scroll-link--elf"
+          >
+            <div className="font-cinzel text-sm">Weekly Council</div>
+            <div className="mt-1 text-xs">
+              Review treaties, lantern brightness, and journey morale.
+            </div>
+          </Link>
 
-  {/* Weekly Council */}
-  <Link
-    to="/weekly-council"
-    className="group block parchment-card px-4 py-3 hover:brightness-105 transition"
-  >
-    <div className="font-cinzel text-sm text-amber-800">
-      Weekly Council
-    </div>
-    <div className="mt-1 text-xs text-neutral-800">
-      Review treaties, lantern brightness, and journey morale.
-    </div>
-  </Link>
-
-  {/* Story Chronicle */}
-  <Link
-    to="/story-log"
-    className="group block parchment-card px-4 py-3 hover:brightness-105 transition"
-  >
-    <div className="font-cinzel text-sm text-amber-900">
-      Story Chronicle
-    </div>
-    <div className="mt-1 text-xs text-neutral-800">
-      Read the weekly chronicles of your path to the Grey Havens.
-    </div>
-  </Link>
-</nav>
+          <Link
+            to="/story-log"
+            className="nav-scroll-link nav-scroll-link--chronicle"
+          >
+            <div className="font-cinzel text-sm">Story Chronicle</div>
+            <div className="mt-1 text-xs">
+              Read the weekly chronicles of your path to the Grey Havens.
+            </div>
+          </Link>
+        </nav>
       </div>
     </div>
   );

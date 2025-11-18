@@ -5,7 +5,6 @@ type Props = {
   progress: number; // 0〜1
   dayNumber: number; // 1〜90
   currentWeek?: number; // 1〜12 / 0 or undefined のときはハイライト無し
-  daysElapsed?: number; // Day X of 90 表示用
 };
 
 type Point = { x: number; y: number };
@@ -26,7 +25,6 @@ export default function ElvenPathMap({
   progress,
   dayNumber,
   currentWeek,
-  daysElapsed,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -36,10 +34,6 @@ export default function ElvenPathMap({
   const [weekDotsPos, setWeekDotsPos] = useState<Point[]>([]);
   const [reached, setReached] = useState<Record<string, boolean>>({});
 
-  const safeDay =
-    daysElapsed === undefined
-      ? 0
-      : Math.max(0, Math.min(90, daysElapsed));
 
   // ランタンとは別の「光るポイント」用
   const checkpoints = [
@@ -528,7 +522,6 @@ export default function ElvenPathMap({
   const pos = labelPos[item.name];
   if (!pos) return null;
 
-  const isRightEdgeLabel =
     item.name === "Starwatch Ridge" ||
     item.name === "Shimmering Coast";
 
