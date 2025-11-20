@@ -3,5 +3,5 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/shared-lantern/",   // ← ここを追加
+  base: "/shared-lantern/",   // ← これを追加
 });
